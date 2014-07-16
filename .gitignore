@@ -1,3 +1,9 @@
+# Eclipse metadata
+.*
+
+# Eclipse debug folder
+Debug/
+
 # Compiled Object files
 *.slo
 *.lo
