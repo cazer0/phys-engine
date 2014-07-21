@@ -9,7 +9,23 @@
 #define SDLVIEW_H_
 
 #include <SDL2/SDL.h>
+// Windows
+#ifdef WIN32
+#include <GL/glew.h>
 
+#else
+//Linux
+#define GL3_PROTOTYPES 1
+#include <GL/gl.h>
+
+#endif
+
+//OpenGL version
+static const int OPENGL_MAJOR=3;
+static const int OPENGL_MINOR=1;
+
+//OpenGL double buffer
+static const int OPENGL_DEPTH_SIZE=32;
 static const int SDL_ERROR=1;
 
 
@@ -22,8 +38,8 @@ public:
 	static void Print_sdl_err();
 
 private:
-	SDL_Window *pMainWindow;
-	SDL_Renderer *pMainRenderer;
+	SDL_Window		*pMainWindow;
+	SDL_GLContext	glContext;
 };
 
 #endif /* SDLVIEW_H_ */

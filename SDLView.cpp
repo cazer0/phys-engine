@@ -19,22 +19,33 @@ SDLView::SDLView(unsigned int width, unsigned int height) {
 	}
 
 	//Create Main window
-	pMainWindow = SDL_CreateWindow("Main View",SDL_WINDOWPOS_CENTERED,SDL_WINDOWPOS_CENTERED,
+	pMainWindow = SDL_CreateWindow("Main View",SDL_WINDOWPOS_CENTERED,
+									SDL_WINDOWPOS_CENTERED,
 									width, height,
-									SDL_WINDOW_SHOWN);
-	if(pMainWindow==NULL){
+									SDL_WINDOW_SHOWN | SDL_WINDOW_OPENGL);
+	if(pMainWindow==0){
 		throw SDL_ERROR;
 	}
 
-	//Create Main Renderer
-	pMainRenderer = SDL_CreateRenderer(pMainWindow,-1, SDL_RENDERER_ACCELERATED);
-	if(pMainRenderer==NULL){
+	//Create OpenGL context
+	glContext = SDL_GL_CreateContext(pMainWindow);
+	if(glContext==0){
+		SDL_DestroyWindow(pMainWindow);
+		SDL_Quit();
 		throw SDL_ERROR;
 	}
+
+	// SDL version
+	SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, OPENGL_MAJOR);
+	SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, OPENGL_MINOR);
+
+	// Double buffer
+	SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
+	SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, OPENGL_DEPTH_SIZE);
 }
 
 SDLView::~SDLView() {
-	SDL_DestroyRenderer(pMainRenderer);
+	SDL_GL_DeleteContext(glContext);
 	SDL_DestroyWindow(pMainWindow);
 	SDL_Quit();
 }
@@ -60,6 +71,9 @@ int SDLView::Launch_event_loop()
                 break;
             default:break;
         }
+        //Refresh window
+        glClear(GL_COLOR_BUFFER_BIT);
+        SDL_GL_SwapWindow(pMainWindow);
     }
     return EXIT_FAILURE;
 }
