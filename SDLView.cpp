@@ -60,6 +60,7 @@ int SDLView::Launch_event_loop()
 {
     SDL_Event event;
 
+    float vertices[]={-0.5,-0.5, 0, 0.5, 0.5,-0.5};
     std::cout << "Launching main event loop" << std::endl;
     while(true)
     {
@@ -71,8 +72,15 @@ int SDLView::Launch_event_loop()
                 break;
             default:break;
         }
-        //Refresh window
+        //Clear window
         glClear(GL_COLOR_BUFFER_BIT);
+
+        //TEST
+        glVertexAttribPointer(0,2, GL_FLOAT, GL_FALSE,0,vertices);
+        glEnableVertexAttribArray(0);
+        glDrawArrays(GL_TRIANGLES,0,3);
+
+        //Refresh window
         SDL_GL_SwapWindow(pMainWindow);
     }
     return EXIT_FAILURE;
