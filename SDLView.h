@@ -38,8 +38,9 @@ public:
 	static void Print_sdl_err();
 
 private:
-	SDL_Window		*pMainWindow;
-	SDL_GLContext	glContext;
+	SDL_Window*		m_pMainWindow;
+	SDL_GLContext	m_glContext;
+	SDL_Event		m_Event;
 };
 
 #endif /* SDLVIEW_H_ */

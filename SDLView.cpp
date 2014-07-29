@@ -7,9 +7,8 @@
 
 #include "SDLView.h"
 #include <SDL2/SDL.h>
-
 #include <iostream>
-
+#include "Shader.h"
 
 SDLView::SDLView(unsigned int width, unsigned int height) {
 	// SDL Init
@@ -19,18 +18,18 @@ SDLView::SDLView(unsigned int width, unsigned int height) {
 	}
 
 	//Create Main window
-	pMainWindow = SDL_CreateWindow("Main View",SDL_WINDOWPOS_CENTERED,
+	m_pMainWindow = SDL_CreateWindow("Main View",SDL_WINDOWPOS_CENTERED,
 									SDL_WINDOWPOS_CENTERED,
 									width, height,
 									SDL_WINDOW_SHOWN | SDL_WINDOW_OPENGL);
-	if(pMainWindow==0){
+	if(m_pMainWindow==0){
 		throw SDL_ERROR;
 	}
 
 	//Create OpenGL context
-	glContext = SDL_GL_CreateContext(pMainWindow);
-	if(glContext==0){
-		SDL_DestroyWindow(pMainWindow);
+	m_glContext = SDL_GL_CreateContext(m_pMainWindow);
+	if(m_glContext==0){
+		SDL_DestroyWindow(m_pMainWindow);
 		SDL_Quit();
 		throw SDL_ERROR;
 	}
@@ -45,8 +44,8 @@ SDLView::SDLView(unsigned int width, unsigned int height) {
 }
 
 SDLView::~SDLView() {
-	SDL_GL_DeleteContext(glContext);
-	SDL_DestroyWindow(pMainWindow);
+	SDL_GL_DeleteContext(m_glContext);
+	SDL_DestroyWindow(m_pMainWindow);
 	SDL_Quit();
 }
 
@@ -60,7 +59,21 @@ int SDLView::Launch_event_loop()
 {
     SDL_Event event;
 
-    float vertices[]={-0.5,-0.5, 0, 0.5, 0.5,-0.5};
+    float vertices[]={
+    		-0.7f,-0.7f,
+    		0, 0.7f,
+    		0.7f,-0.7f};
+    float colors[]={
+    		//R, G, B
+    		0.5, 0.0, 0.0,
+    		0.0, 0.5, 0.0,
+    		0.0, 0.0, 0.5
+    };
+
+    //Shader init
+    Shader myShader("Shaders/couleur2D.vert", "Shaders/couleur2D.frag");
+    myShader.charger();
+
     std::cout << "Launching main event loop" << std::endl;
     while(true)
     {
@@ -76,12 +89,28 @@ int SDLView::Launch_event_loop()
         glClear(GL_COLOR_BUFFER_BIT);
 
         //TEST
-        glVertexAttribPointer(0,2, GL_FLOAT, GL_FALSE,0,vertices);
-        glEnableVertexAttribArray(0);
-        glDrawArrays(GL_TRIANGLES,0,3);
+
+        glUseProgram(myShader.getProgramID());
+        {
+        	//Vertices init
+			glVertexAttribPointer(0,2, GL_FLOAT, GL_FALSE,0,vertices);
+			glEnableVertexAttribArray(0);
+
+			//Colors Init
+			glVertexAttribPointer(1,3, GL_FLOAT, GL_FALSE,0,colors);
+			glEnableVertexAttribArray(1);
+
+			//Draw
+			glDrawArrays(GL_TRIANGLES,0,3);
+
+			//De-init
+			glDisableVertexAttribArray(1);
+			glDisableVertexAttribArray(0);
+        }
+        glUseProgram(0);
 
         //Refresh window
-        SDL_GL_SwapWindow(pMainWindow);
+        SDL_GL_SwapWindow(m_pMainWindow);
     }
     return EXIT_FAILURE;
 }
