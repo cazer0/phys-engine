@@ -41,6 +41,10 @@ SDLView::SDLView(unsigned int width, unsigned int height) {
 	// Double buffer
 	SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
 	SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, OPENGL_DEPTH_SIZE);
+
+	// Matrix creation
+	m_Projection = glm::perspective(70.0, (const double)width/height,1.0,100.0);
+	m_ModelView = glm::mat4(1.0);
 }
 
 SDLView::~SDLView() {
@@ -60,18 +64,18 @@ int SDLView::Launch_event_loop()
     SDL_Event event;
 
     float vertices[]={
-    		-0.7f,-0.7f,
-    		0, 0.7f,
-    		0.7f,-0.7f};
+    		0.0f,	0.0f,	-1.0f,
+    		0.5f,	0.0f, 	-1.0f,
+    		0.0f,	0.5f, 	-1.0f};
     float colors[]={
     		//R, G, B
-    		0.5, 0.0, 0.0,
-    		0.0, 0.5, 0.0,
-    		0.0, 0.0, 0.5
+    		1.0f, 0.0, 0.0,
+    		0.0, 1.0f, 0.0,
+    		0.0, 0.0, 1.0f
     };
 
     //Shader init
-    Shader myShader("Shaders/couleur2D.vert", "Shaders/couleur2D.frag");
+    Shader myShader("Shaders/couleur3D.vert", "Shaders/couleur3D.frag");
     myShader.charger();
 
     std::cout << "Launching main event loop" << std::endl;
@@ -85,21 +89,39 @@ int SDLView::Launch_event_loop()
                 break;
             default:break;
         }
-        //Clear window
+        // Clear window
         glClear(GL_COLOR_BUFFER_BIT);
 
-        //TEST
+        // Matrix reset
+        m_ModelView = glm::mat4(1.0);
+        m_ModelView = glm::lookAt(glm::vec3(1,1,1),glm::vec3(0,0,0),glm::vec3(0,1,0));
 
+        // Begin display
         glUseProgram(myShader.getProgramID());
         {
         	//Vertices init
-			glVertexAttribPointer(0,2, GL_FLOAT, GL_FALSE,0,vertices);
+			glVertexAttribPointer(0,3, GL_FLOAT, GL_FALSE,0,vertices);
 			glEnableVertexAttribArray(0);
 
 			//Colors Init
 			glVertexAttribPointer(1,3, GL_FLOAT, GL_FALSE,0,colors);
 			glEnableVertexAttribArray(1);
 
+			//Matrix transformation
+			m_ModelView = glm::translate(m_ModelView,glm::vec3(0.4f,0.0f,0.0f));
+			m_ModelView = glm::rotate(m_ModelView,60.0f, glm::vec3(0.0f,0.0f,1.0f));
+			m_ModelView = glm::scale(m_ModelView, glm::vec3(2,2,1));
+
+			//Send matrix to the shaders
+			glUniformMatrix4fv(glGetUniformLocation(myShader.getProgramID(),"modelview"),
+								1,
+								GL_FALSE,
+								glm::value_ptr(m_ModelView));
+
+			glUniformMatrix4fv(glGetUniformLocation(myShader.getProgramID(),"projection"),
+											1,
+											GL_FALSE,
+											glm::value_ptr(m_Projection));
 			//Draw
 			glDrawArrays(GL_TRIANGLES,0,3);
 

@@ -9,16 +9,12 @@
 #define SDLVIEW_H_
 
 #include <SDL2/SDL.h>
-// Windows
-#ifdef WIN32
-#include <GL/glew.h>
 
-#else
-//Linux
 #define GL3_PROTOTYPES 1
 #include <GL3/gl3.h>
-
-#endif
+#include <glm/glm.hpp>
+#include <glm/gtx/transform.hpp>
+#include <glm/gtc/type_ptr.hpp>
 
 //OpenGL version
 static const int OPENGL_MAJOR=3;
@@ -41,6 +37,9 @@ private:
 	SDL_Window*		m_pMainWindow;
 	SDL_GLContext	m_glContext;
 	SDL_Event		m_Event;
+
+	glm::mat4		m_Projection;
+	glm::mat4		m_ModelView;
 };
 
 #endif /* SDLVIEW_H_ */
