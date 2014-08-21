@@ -42,6 +42,8 @@ SDLView::SDLView(unsigned int width, unsigned int height) {
 	SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
 	SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, OPENGL_DEPTH_SIZE);
 
+	glEnable(GL_DEPTH_TEST);
+
 	// Matrix creation
 	m_Projection = glm::perspective(70.0, (const double)width/height,1.0,100.0);
 	m_ModelView = glm::mat4(1.0);
@@ -59,19 +61,64 @@ void SDLView::Print_sdl_err()
 	std::cerr<< "SDL err"<< SDL_GetError()<< std::endl;
 }
 
+#define VERTEX_BA_UP_L		1.0,-1.0,1.0
+#define VERTEX_BA_UP_R		-1.0,-1.0,1.0
+#define VERTEX_BA_DO_L		1.0,-1.0,-1.0
+#define VERTEX_BA_DO_R		-1.0,-1.0,-1.0
+#define VERTEX_FR_UP_L		1.0,1.0,1.0
+#define VERTEX_FR_UP_R		-1.0,1.0,1.0
+#define VERTEX_FR_DO_L		1.0,1.0,-1.0
+#define VERTEX_FR_DO_R		-1.0,1.0,-1.0
+
 int SDLView::Launch_event_loop()
 {
     SDL_Event event;
 
     float vertices[]={
-    		0.0f,	0.0f,	-1.0f,
-    		0.5f,	0.0f, 	-1.0f,
-    		0.0f,	0.5f, 	-1.0f};
+    		//BACK
+    		VERTEX_BA_UP_R, VERTEX_BA_UP_L, VERTEX_BA_DO_L,
+    		VERTEX_BA_UP_R,	VERTEX_BA_DO_R, VERTEX_BA_DO_L,
+
+    		//RIGHT
+    		VERTEX_BA_UP_R, VERTEX_BA_DO_R,	VERTEX_FR_DO_R,
+    		VERTEX_BA_UP_R, VERTEX_FR_UP_R,	VERTEX_FR_DO_R,
+
+    		//BOTTOM
+    		VERTEX_BA_DO_L, VERTEX_BA_DO_R,	VERTEX_FR_DO_R,
+    		VERTEX_BA_DO_L, VERTEX_FR_DO_L,	VERTEX_FR_DO_R,
+
+    		//LEFT
+    		VERTEX_BA_UP_L, VERTEX_BA_DO_L,	VERTEX_FR_DO_L,
+    		VERTEX_BA_UP_L, VERTEX_FR_UP_L,	VERTEX_FR_DO_L,
+
+    		//FRONT
+    		VERTEX_FR_UP_L, VERTEX_FR_UP_R,	VERTEX_FR_DO_R,
+    		VERTEX_FR_UP_L, VERTEX_FR_DO_L,	VERTEX_FR_DO_R,
+
+    		//TOP
+    		VERTEX_BA_UP_L, VERTEX_BA_UP_R,	VERTEX_FR_UP_R,
+    		VERTEX_BA_UP_L, VERTEX_FR_UP_L,	VERTEX_FR_UP_R
+    };
+
     float colors[]={
     		//R, G, B
-    		1.0f, 0.0, 0.0,
-    		0.0, 1.0f, 0.0,
-    		0.0, 0.0, 1.0f
+    		0.1f, 0.1f, 0.1f,		0.1f, 0.1f, 0.1f,		0.1f, 0.1f, 0.1f,
+    		0.1f, 0.1f, 0.1f,		0.1f, 0.1f, 0.1f,		0.1f, 0.1f, 0.1f,
+
+    		0.25f,0.25f,0.25f,		0.25f,0.25f,0.25f,		0.25f,0.25f,0.25f,
+    		0.25f,0.25f,0.25f,		0.25f,0.25f,0.25f,		0.25f,0.25f,0.25f,
+
+    		0.40f,0.40f,0.40f,		0.40f,0.40f,0.40f,		0.40f,0.40f,0.40f,
+    		0.40f,0.40f,0.40f,		0.40f,0.40f,0.40f,		0.40f,0.40f,0.40f,
+
+    		0.55f,0.55f,0.55f,		0.55f,0.55f,0.55f,		0.55f,0.55f,0.55f,
+    		0.55f,0.55f,0.55f,		0.55f,0.55f,0.55f,		0.55f,0.55f,0.55f,
+
+    		0.70f,0.70f,0.70f,		0.70f,0.70f,0.70f,		0.70f,0.70f,0.70f,
+    		0.70f,0.70f,0.70f,		0.70f,0.70f,0.70f,		0.70f,0.70f,0.70f,
+
+    		0.85f,0.85f,0.85f,		0.85f,0.85f,0.85f,		0.85f,0.85f,0.85f,
+    		0.85f,0.85f,0.85f,		0.85f,0.85f,0.85f,		0.85f,0.85f,0.85f
     };
 
     //Shader init
@@ -90,11 +137,11 @@ int SDLView::Launch_event_loop()
             default:break;
         }
         // Clear window
-        glClear(GL_COLOR_BUFFER_BIT);
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
         // Matrix reset
         m_ModelView = glm::mat4(1.0);
-        m_ModelView = glm::lookAt(glm::vec3(1,1,1),glm::vec3(0,0,0),glm::vec3(0,1,0));
+        m_ModelView = glm::lookAt(glm::vec3(-5,5,5),glm::vec3(0,0,0),glm::vec3(0,0,1));
 
         // Begin display
         glUseProgram(myShader.getProgramID());
@@ -108,9 +155,9 @@ int SDLView::Launch_event_loop()
 			glEnableVertexAttribArray(1);
 
 			//Matrix transformation
-			m_ModelView = glm::translate(m_ModelView,glm::vec3(0.4f,0.0f,0.0f));
-			m_ModelView = glm::rotate(m_ModelView,60.0f, glm::vec3(0.0f,0.0f,1.0f));
-			m_ModelView = glm::scale(m_ModelView, glm::vec3(2,2,1));
+			//m_ModelView = glm::translate(m_ModelView,glm::vec3(0.4f,0.0f,0.0f));
+			//m_ModelView = glm::rotate(m_ModelView,60.0f, glm::vec3(0.0f,0.0f,1.0f));
+			//m_ModelView = glm::scale(m_ModelView, glm::vec3(2,2,1));
 
 			//Send matrix to the shaders
 			glUniformMatrix4fv(glGetUniformLocation(myShader.getProgramID(),"modelview"),
@@ -123,7 +170,7 @@ int SDLView::Launch_event_loop()
 											GL_FALSE,
 											glm::value_ptr(m_Projection));
 			//Draw
-			glDrawArrays(GL_TRIANGLES,0,3);
+			glDrawArrays(GL_TRIANGLES,0,6*6);
 
 			//De-init
 			glDisableVertexAttribArray(1);
