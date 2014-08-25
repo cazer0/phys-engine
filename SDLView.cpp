@@ -10,6 +10,8 @@
 #include <iostream>
 #include "Shader.h"
 
+#include "Cube.h"
+
 SDLView::SDLView(unsigned int width, unsigned int height) {
 	// SDL Init
 	if(SDL_Init(SDL_INIT_VIDEO)==-1)
@@ -61,74 +63,27 @@ void SDLView::Print_sdl_err()
 	std::cerr<< "SDL err"<< SDL_GetError()<< std::endl;
 }
 
-#define VERTEX_BA_UP_L		1.0,-1.0,1.0
-#define VERTEX_BA_UP_R		-1.0,-1.0,1.0
-#define VERTEX_BA_DO_L		1.0,-1.0,-1.0
-#define VERTEX_BA_DO_R		-1.0,-1.0,-1.0
-#define VERTEX_FR_UP_L		1.0,1.0,1.0
-#define VERTEX_FR_UP_R		-1.0,1.0,1.0
-#define VERTEX_FR_DO_L		1.0,1.0,-1.0
-#define VERTEX_FR_DO_R		-1.0,1.0,-1.0
-
 int SDLView::Launch_event_loop()
 {
     SDL_Event event;
-
-    float vertices[]={
-    		//BACK
-    		VERTEX_BA_UP_R, VERTEX_BA_UP_L, VERTEX_BA_DO_L,
-    		VERTEX_BA_UP_R,	VERTEX_BA_DO_R, VERTEX_BA_DO_L,
-
-    		//RIGHT
-    		VERTEX_BA_UP_R, VERTEX_BA_DO_R,	VERTEX_FR_DO_R,
-    		VERTEX_BA_UP_R, VERTEX_FR_UP_R,	VERTEX_FR_DO_R,
-
-    		//BOTTOM
-    		VERTEX_BA_DO_L, VERTEX_BA_DO_R,	VERTEX_FR_DO_R,
-    		VERTEX_BA_DO_L, VERTEX_FR_DO_L,	VERTEX_FR_DO_R,
-
-    		//LEFT
-    		VERTEX_BA_UP_L, VERTEX_BA_DO_L,	VERTEX_FR_DO_L,
-    		VERTEX_BA_UP_L, VERTEX_FR_UP_L,	VERTEX_FR_DO_L,
-
-    		//FRONT
-    		VERTEX_FR_UP_L, VERTEX_FR_UP_R,	VERTEX_FR_DO_R,
-    		VERTEX_FR_UP_L, VERTEX_FR_DO_L,	VERTEX_FR_DO_R,
-
-    		//TOP
-    		VERTEX_BA_UP_L, VERTEX_BA_UP_R,	VERTEX_FR_UP_R,
-    		VERTEX_BA_UP_L, VERTEX_FR_UP_L,	VERTEX_FR_UP_R
-    };
-
-    float colors[]={
-    		//R, G, B
-    		0.1f, 0.1f, 0.1f,		0.1f, 0.1f, 0.1f,		0.1f, 0.1f, 0.1f,
-    		0.1f, 0.1f, 0.1f,		0.1f, 0.1f, 0.1f,		0.1f, 0.1f, 0.1f,
-
-    		0.25f,0.25f,0.25f,		0.25f,0.25f,0.25f,		0.25f,0.25f,0.25f,
-    		0.25f,0.25f,0.25f,		0.25f,0.25f,0.25f,		0.25f,0.25f,0.25f,
-
-    		0.40f,0.40f,0.40f,		0.40f,0.40f,0.40f,		0.40f,0.40f,0.40f,
-    		0.40f,0.40f,0.40f,		0.40f,0.40f,0.40f,		0.40f,0.40f,0.40f,
-
-    		0.55f,0.55f,0.55f,		0.55f,0.55f,0.55f,		0.55f,0.55f,0.55f,
-    		0.55f,0.55f,0.55f,		0.55f,0.55f,0.55f,		0.55f,0.55f,0.55f,
-
-    		0.70f,0.70f,0.70f,		0.70f,0.70f,0.70f,		0.70f,0.70f,0.70f,
-    		0.70f,0.70f,0.70f,		0.70f,0.70f,0.70f,		0.70f,0.70f,0.70f,
-
-    		0.85f,0.85f,0.85f,		0.85f,0.85f,0.85f,		0.85f,0.85f,0.85f,
-    		0.85f,0.85f,0.85f,		0.85f,0.85f,0.85f,		0.85f,0.85f,0.85f
-    };
+    uint32_t begin_time(0);
+    uint32_t elapsed_time(0);
+    uint32_t framerate_ms(1000/50);
 
     //Shader init
     Shader myShader("Shaders/couleur3D.vert", "Shaders/couleur3D.frag");
     myShader.charger();
 
+    // Objects init
+    Cube myCube(2.0, "Shaders/couleur3D.vert", "Shaders/couleur3D.frag");
+
+    float angle(0.0);
+
     std::cout << "Launching main event loop" << std::endl;
     while(true)
     {
-        SDL_WaitEvent(&event);
+    	begin_time = SDL_GetTicks();
+        SDL_PollEvent(&event);
         switch(event.type)
         {
             case SDL_QUIT:
@@ -141,45 +96,22 @@ int SDLView::Launch_event_loop()
 
         // Matrix reset
         m_ModelView = glm::mat4(1.0);
-        m_ModelView = glm::lookAt(glm::vec3(-5,5,5),glm::vec3(0,0,0),glm::vec3(0,0,1));
+        m_ModelView = glm::lookAt(glm::vec3(6,6,6),glm::vec3(3,0,0),glm::vec3(0,0,1));
+
+        angle +=4.0f;
+        if(angle >360.0f) angle -=360.0f;
+        m_ModelView = glm::rotate(m_ModelView, angle, glm::vec3(0,0,1));
 
         // Begin display
-        glUseProgram(myShader.getProgramID());
-        {
-        	//Vertices init
-			glVertexAttribPointer(0,3, GL_FLOAT, GL_FALSE,0,vertices);
-			glEnableVertexAttribArray(0);
-
-			//Colors Init
-			glVertexAttribPointer(1,3, GL_FLOAT, GL_FALSE,0,colors);
-			glEnableVertexAttribArray(1);
-
-			//Matrix transformation
-			//m_ModelView = glm::translate(m_ModelView,glm::vec3(0.4f,0.0f,0.0f));
-			//m_ModelView = glm::rotate(m_ModelView,60.0f, glm::vec3(0.0f,0.0f,1.0f));
-			//m_ModelView = glm::scale(m_ModelView, glm::vec3(2,2,1));
-
-			//Send matrix to the shaders
-			glUniformMatrix4fv(glGetUniformLocation(myShader.getProgramID(),"modelview"),
-								1,
-								GL_FALSE,
-								glm::value_ptr(m_ModelView));
-
-			glUniformMatrix4fv(glGetUniformLocation(myShader.getProgramID(),"projection"),
-											1,
-											GL_FALSE,
-											glm::value_ptr(m_Projection));
-			//Draw
-			glDrawArrays(GL_TRIANGLES,0,6*6);
-
-			//De-init
-			glDisableVertexAttribArray(1);
-			glDisableVertexAttribArray(0);
-        }
-        glUseProgram(0);
+        myCube.Afficher(m_Projection, m_ModelView);
 
         //Refresh window
         SDL_GL_SwapWindow(m_pMainWindow);
+
+        elapsed_time = SDL_GetTicks() - begin_time;
+        if( elapsed_time < framerate_ms)
+        	printf("Elapsed time = %d\n", elapsed_time);
+        	SDL_Delay(framerate_ms - elapsed_time);
     }
     return EXIT_FAILURE;
 }
