@@ -16,6 +16,9 @@
 #include <glm/gtx/transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 
+#include "Input.h"
+
+
 //OpenGL version
 static const int OPENGL_MAJOR=3;
 static const int OPENGL_MINOR=1;
@@ -36,7 +39,7 @@ public:
 private:
 	SDL_Window*		m_pMainWindow;
 	SDL_GLContext	m_glContext;
-	SDL_Event		m_Event;
+	Input			m_input;
 
 	glm::mat4		m_Projection;
 	glm::mat4		m_ModelView;

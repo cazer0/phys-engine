@@ -12,7 +12,8 @@
 
 #include "Cube.h"
 
-SDLView::SDLView(unsigned int width, unsigned int height) {
+SDLView::SDLView(unsigned int width, unsigned int height) : m_input()
+{
 	// SDL Init
 	if(SDL_Init(SDL_INIT_VIDEO)==-1)
 	{
@@ -65,7 +66,6 @@ void SDLView::Print_sdl_err()
 
 int SDLView::Launch_event_loop()
 {
-    SDL_Event event;
     uint32_t begin_time(0);
     uint32_t elapsed_time(0);
     uint32_t framerate_ms(1000/50);
@@ -77,30 +77,40 @@ int SDLView::Launch_event_loop()
     // Objects init
     Cube myCube(2.0, "Shaders/couleur3D.vert", "Shaders/couleur3D.frag");
 
-    float angle(0.0);
+    float angleX(0.0);
+    float angleY(0.0);
 
     std::cout << "Launching main event loop" << std::endl;
-    while(true)
+    while(!m_input.terminate())
     {
     	begin_time = SDL_GetTicks();
-        SDL_PollEvent(&event);
-        switch(event.type)
-        {
-            case SDL_QUIT:
-            	return EXIT_SUCCESS;
-                break;
-            default:break;
-        }
-        // Clear window
+
+    	//Input management
+    	m_input.updateEvents();
+
+    	if(m_input.isKeyPressed(SDL_SCANCODE_LEFT))
+    	    angleX-=4.0f;
+
+    	if(m_input.isKeyPressed(SDL_SCANCODE_RIGHT))
+    	    angleX+=4.0f;
+
+    	if(m_input.isKeyPressed(SDL_SCANCODE_UP))
+    	    angleY+=4.0f;
+
+    	if(m_input.isKeyPressed(SDL_SCANCODE_DOWN))
+    	    angleY-=4.0f;
+
+    	if(angleX >360.0f) angleX -=360.0f;
+    	if(angleY >360.0f) angleY -=360.0f;
+    	// Clear window
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
         // Matrix reset
         m_ModelView = glm::mat4(1.0);
-        m_ModelView = glm::lookAt(glm::vec3(6,6,6),glm::vec3(3,0,0),glm::vec3(0,0,1));
+        m_ModelView = glm::lookAt(glm::vec3(0,6,6),glm::vec3(0,0,0),glm::vec3(0,0,1));
 
-        angle +=4.0f;
-        if(angle >360.0f) angle -=360.0f;
-        m_ModelView = glm::rotate(m_ModelView, angle, glm::vec3(0,0,1));
+        m_ModelView = glm::rotate(m_ModelView, angleX, glm::vec3(0,0,1));
+        m_ModelView = glm::rotate(m_ModelView, angleY, glm::vec3(1,0,0));
 
         // Begin display
         myCube.Afficher(m_Projection, m_ModelView);
@@ -110,7 +120,6 @@ int SDLView::Launch_event_loop()
 
         elapsed_time = SDL_GetTicks() - begin_time;
         if( elapsed_time < framerate_ms)
-        	printf("Elapsed time = %d\n", elapsed_time);
         	SDL_Delay(framerate_ms - elapsed_time);
     }
     return EXIT_FAILURE;
